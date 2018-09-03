@@ -3,13 +3,25 @@
  PUBLIC "-//mybatis.org//DTD Config 3.0//EN"
  "http://mybatis.org/dtd/mybatis-3-config.dtd">
 <configuration>
+    <properties resource="config.properties">
+    	<!-- 开启默认值表示，如果value是其他的值，则表示分隔符":"变成了value值的表示 -->
+    	<property name="org.apache.ibatis.parsing.PropertyParser.enable-default-value" value="true"/>
+        <property name="username" value="DINGJUN"/>
+    </properties>
+    <settings>
+        <setting name="cacheEnabled" value="false"/>
+        <setting name="lazyLoadingEnabled" value="false"/>
+    </settings>
+    <typeHandlers>
+    	<typeHandler handler="com.chinatvpay.type.hander.MyTypeHandler"/>
+    </typeHandlers>
     <environments default="development">
         <environment id="development">
             <transactionManager type="JDBC" />
             <dataSource type="POOLED">
-                <property name="driver" value="oracle.jdbc.driver.OracleDriver" />
+                <property name="driver" value="${driver}" />
                 <property name="url" value="jdbc:oracle:thin:@127.0.0.1:1521:xe" />
-                <property name="username" value="DINGJUN" />
+                <property name="username" value="${username}" />
                 <property name="password" value="r696697" />
             </dataSource>
         </environment>
@@ -18,3 +30,465 @@
         <mapper resource="UserMapper.xml" />
     </mappers>
 </configuration>
+
+
+<!-- 官方地址：http://www.mybatis.org/mybatis-3/zh/configuration.html -->
+<!-- XML 配置
+configuration 配置
+    -properties 属性
+    -settings 设置
+    -typeAliases 类型别名
+    -typeHandlers 类型处理器
+    -objectFactory 对象工厂
+    -plugins 插件
+    -environments 环境
+        -environment 环境变量
+            -transactionManager 事物管理器
+            -dataSource 数据源
+    -databaseIdProvider 数据库厂商标识
+    -mappers 映射器
+
+==============================================================================   
+==================================properties==================================
+一些属性都是外部配置且可动态替换的，既可以在典型的java属性文件中配置，
+也就是在properties文件中配置，也可通过properties元素的子元素来传递，就像下面例子演示的。
+mybatis-config.xml文件中的一个元素，引用了一个外部资源文件
+
+<properties resource="org/mybatis/example/config.properties">
+  <property name="username" value="dev_user"/>
+  <property name="password" value="F2Fa3!33TYyg"/>
+</properties>
+
+这里的属性是可以在整个配置文件中用来替换需要动态配置的属性值的。
+
+<dataSource type="POOLED">
+  <property name="driver" value="${driver}"/>
+  <property name="url" value="${url}"/>
+  <property name="username" value="${username}"/>
+  <property name="password" value="${password}"/>
+</dataSource>
+
+其中的username和password将会由properties元素中定义的相应值替换。
+而dirver和url属性将会有config.properties文件中对应的值来替换。
+需要注意的是，同一个属性值多个地方配置的问题，答案就在下方。
+
+上面的属于配置文件中properties文件的使用，当然也可以通过代码的方式使用配置文件，
+也就是属性文件也可以直接通过流的方式被传到SQLSessionFactoryBuilder.build()方法中。
+SqlSessionFactory factory = new SqlSessionFactoryBuilder().build(reader, props);
+或者
+SqlSessionFactory factory = new SqlSessionFactoryBuilder().build(reader, environment, props);
+也就是将读取的properties文件流直接传给session工厂构造。当然，配置的key值需要和节点元素相同。
+
+如果一个配置文件不知在一个地方进行了配置，那么MyBatis将按照下面的顺序来加载：
+>在 properties 元素体内指定的属性首先被读取。
+>然后根据 properties元素中的 resource属性读取类路径下属性文件或根据 url属性指定的路径读取属性文件，并覆盖已读取的同名属性。
+>最后读取作为方法参数传递的属性，并覆盖已读取的同名属性。
+
+也就是，通过方法参数传递的属性具有最高优先级（也就是代码中书写的等级最高），
+resource/url属性中指定的配置文件次之，最低优先级的是properties属性中指定的属性。
+
+从 3.4.2开始，还可以为占位符指定一个默认值。
+<dataSource type="POOLED">
+  <property name="username" value="${username:ut_user}"/>
+</dataSource>
+ut_user就是传说中的默认值（注意这里的分隔符），不过这个功能并不是默认开启的，需要在properties元素中开启一下。
+<properties resource="org/mybatis/example/config.properties">
+  <property name="org.apache.ibatis.parsing.PropertyParser.enable-default-value" value="true"/>
+</properties>
+其实分隔符是可以自定义的，也很简单就是开启的时候指定。
+<properties resource="org/mybatis/example/config.properties">
+  <property name="org.apache.ibatis.parsing.PropertyParser.default-value-separator" value="?:"/>
+</properties>
+
+
+
+============================================================================
+==================================settings==================================
+这是MyBatis中非常重要的调整设置，它会改变MyBatis的运行时行为。
+设置参数                                                                           描述  >> 有效值 >> 默认值
+cacheEnabled                        全局地开启或关闭配置文件中的所有映射器已经配置的任何缓存。  >> true | false >> true
+lazyLoadingEnabled                  延迟加载的全局开关。当开启时，所有关联对象都会延迟加载。 特定关联关系中可通过设置fetchType属性来覆盖该项的开关状态。  >> true | false  >> false
+aggressiveLazyLoading               当开启时，任何方法的调用都会加载该对象的所有属性。否则，每个属性会按需加载（参考lazyLoadTriggerMethods).  >> true | false  >> false (true in ≤3.4.1)
+multipleResultSetsEnabled           是否允许单一语句返回多结果集（需要兼容驱动）。  >> true | false  >> true
+useColumnLabel                      使用列标签代替列名。不同的驱动在这方面会有不同的表现， 具体可参考相关驱动文档或通过测试这两种不同的模式来观察所用驱动的结果。  >> true | false  >> true
+useGeneratedKeys                    允许 JDBC 支持自动生成主键，需要驱动兼容。 如果设置为 true 则这个设置强制使用自动生成主键，尽管一些驱动不能兼容但仍可正常工作（比如 Derby）。  >> true | false  >> False
+autoMappingBehavior                 指定 MyBatis 应如何自动映射列到字段或属性。 NONE 表示取消自动映射；PARTIAL 只会自动映射没有定义嵌套结果集映射的结果集。 FULL 会自动映射任意复杂的结果集（无论是否嵌套）。  >>  NONE, PARTIAL, FULL   >> PARTIAL
+autoMappingUnknownColumnBehavior    指定发现自动映射目标未知列（或者未知属性类型）的行为。
+                                    NONE: 不做任何反应
+                                    WARNING: 输出提醒日志 ('org.apache.ibatis.session.AutoMappingUnknownColumnBehavior' 的日志等级必须设置为 WARN)
+                                    FAILING: 映射失败 (抛出 SqlSessionException)
+                                    >> NONE, WARNING, FAILING   >>  NONE
+defaultExecutorType                 配置默认的执行器。SIMPLE 就是普通的执行器；REUSE 执行器会重用预处理语句（prepared statements）； BATCH 执行器将重用语句并执行批量更新。  >>  SIMPLE REUSE BATCH   >>  SIMPLE
+defaultStatementTimeout             设置超时时间，它决定驱动等待数据库响应的秒数。 任意正整数   Not Set (null)
+defaultFetchSize                    为驱动的结果集获取数量（fetchSize）设置一个提示值。此参数只可以在查询设置中被覆盖。  >> 任意正整数    >>   Not Set (null)
+safeRowBoundsEnabled                允许在嵌套语句中使用分页（RowBounds）。如果允许使用则设置为false。   >>    true | false    >>   False
+safeResultHandlerEnabled            允许在嵌套语句中使用分页（ResultHandler）。如果允许使用则设置为false。    >>   true | false    >>   True
+mapUnderscoreToCamelCase            是否开启自动驼峰命名规则（camel case）映射，即从经典数据库列名 A_COLUMN 到经典 Java 属性名 aColumn 的类似映射。   >>   true | false    >>   False
+localCacheScope                     MyBatis 利用本地缓存机制（Local Cache）防止循环引用（circular references）和加速重复嵌套查询。 默认值为 SESSION，这种情况下会缓存一个会话中执行的所有查询。 若设置值为 STATEMENT，本地会话仅用在语句执行上，对相同 SqlSession 的不同调用将不会共享数据。  >>  SESSION | STATEMENT   >>  SESSION
+jdbcTypeForNull                     当没有为参数提供特定的 JDBC 类型时，为空值指定 JDBC 类型。 某些驱动需要指定列的 JDBC 类型，多数情况直接用一般类型即可，比如 NULL、VARCHAR 或 OTHER。   JdbcType 常量.  >>  大多都为: NULL, VARCHAR and OTHER   >>  OTHER
+lazyLoadTriggerMethods              指定哪个对象的方法触发一次延迟加载。  >>   用逗号分隔的方法列表。  >>  equals,clone,hashCode,toString
+defaultScriptingLanguage            指定动态 SQL 生成的默认语言。    >>  一个类型别名或完全限定类名。  >>   org.apache.ibatis.scripting.xmltags.XMLLanguageDriver
+defaultEnumTypeHandler              指定 Enum 使用的默认 TypeHandler 。 (从3.4.5开始)   >>  一个类型别名或完全限定类名。  >>   org.apache.ibatis.type.EnumTypeHandler
+callSettersOnNulls                  指定当结果集中值为 null 的时候是否调用映射对象的 setter（map 对象时为 put）方法，这对于有 Map.keySet() 依赖或 null 值初始化的时候是有用的。注意基本类型（int、boolean等）是不能设置成 null 的。   >>    true | false    >>   false
+returnInstanceForEmptyRow           当返回行的所有列都是空时，MyBatis默认返回null。 当开启这个设置时，MyBatis会返回一个空实例。 请注意，它也适用于嵌套的结果集 (i.e. collectioin and association)。（从3.4.2开始）   >>   true | false    >>   false
+logPrefix                           指定 MyBatis 增加到日志名称的前缀。  >>   任何字符串    >>   Not set
+logImpl                             指定 MyBatis 所用日志的具体实现，未指定时将自动查找。  >>  SLF4J | LOG4J | LOG4J2 | JDK_LOGGING | COMMONS_LOGGING | STDOUT_LOGGING | NO_LOGGING    >>   Not set
+proxyFactory                        指定 Mybatis 创建具有延迟加载能力的对象所用到的代理工具。   CGLIB | JAVASSIST   JAVASSIST (MyBatis 3.3 or above)
+vfsImpl                             指定VFS的实现     >>  自定义VFS的实现的类全限定名，以逗号分隔。  >>   Not set
+useActualParamName                  允许使用方法签名中的名称作为语句参数名称。 为了使用该特性，你的工程必须采用Java 8编译，并且加上-parameters选项。（从3.4.1开始）  >>  true | false    >>   true
+configurationFactory                指定一个提供Configuration实例的类。 这个被返回的Configuration实例用来加载被反序列化对象的懒加载属性值。 这个类必须包含一个签名方法static Configuration getConfiguration(). (从 3.2.3 版本开始)   >>  类型别名或者全类名.  >>  Not set
+
+完整的settings元素配置
+<settings>
+  <setting name="cacheEnabled" value="true"/>
+  <setting name="lazyLoadingEnabled" value="true"/>
+  <setting name="multipleResultSetsEnabled" value="true"/>
+  <setting name="useColumnLabel" value="true"/>
+  <setting name="useGeneratedKeys" value="false"/>
+  <setting name="autoMappingBehavior" value="PARTIAL"/>
+  <setting name="autoMappingUnknownColumnBehavior" value="WARNING"/>
+  <setting name="defaultExecutorType" value="SIMPLE"/>
+  <setting name="defaultStatementTimeout" value="25"/>
+  <setting name="defaultFetchSize" value="100"/>
+  <setting name="safeRowBoundsEnabled" value="false"/>
+  <setting name="mapUnderscoreToCamelCase" value="false"/>
+  <setting name="localCacheScope" value="SESSION"/>
+  <setting name="jdbcTypeForNull" value="OTHER"/>
+  <setting name="lazyLoadTriggerMethods" value="equals,clone,hashCode,toString"/>
+</settings>
+
+
+
+===============================================================================
+==================================typeAliases==================================
+类别名是为java类型设置一个短的名字。它只和XML配置有关，存在的意义仅在于用来减少类完全限定名的冗余。
+<typeAliases>
+  <typeAlias alias="Author" type="domain.blog.Author"/>
+  <typeAlias alias="Dingjun" type="domain.blog.Dingjun"/>
+  <typeAlias alias="Comment" type="domain.blog.Comment"/>
+  <typeAlias alias="Post" type="domain.blog.Post"/>
+  <typeAlias alias="Section" type="domain.blog.Section"/>
+  <typeAlias alias="Tag" type="domain.blog.Tag"/>
+</typeAliases>
+这样配置之后，Dingjun可以用在任何使用domain.blog.Dingjun的地方。
+也可以指定一个报名，它会在包名下面搜索需要的javabean。
+<typeAliases>
+  <package name="domain.blog"/>
+</typeAliases>
+每一个在domain.blog中的java bean，在没有注解的情况下，会使用bean的首字母小写的非限定类名作为它的别名。
+domain.blog.Dingjun的别名就是dingjun，如果有注解的话，就是注解中指定的值。
+@Alias("dingjun")
+public class Dingjun {
+    // TODO
+}
+
+常见的java类型内建的相应的类型别名。对大小写是不敏感的，需要注意的是由基本类型名称重复导致的特殊处理。
+别名                      映射的类型
+_byte       byte
+_long       long
+_short      short
+_int        int
+_integer    int
+_double     double
+_float      float
+_boolean    boolean
+string      String
+byte        Byte
+long        Long
+short       Short
+int         Integer
+integer     Integer
+double      Double
+float       Float
+boolean     Boolean
+date        Date
+decimal     BigDecimal
+bigdecimal  BigDecimal
+object      Object
+map         Map
+hashmap     HashMap
+list        List
+arraylist   ArrayList
+collection  Collection
+iterator    Iterator
+
+
+
+================================================================================
+==================================typeHandlers==================================
+无论是 MyBatis 在预处理语句（PreparedStatement）中设置一个参数时，还是从结果集中取出一个值时， 
+都会用类型处理器将获取的值以合适的方式转换成 Java 类型。下表描述了一些默认的类型处理器。
+
+类型处理器                                                   Java 类型                                                  JDBC 类型
+BooleanTypeHandler          java.lang.Boolean, boolean  数据库兼容的 BOOLEAN
+ByteTypeHandler             java.lang.Byte, byte        数据库兼容的 NUMERIC 或 BYTE
+ShortTypeHandler            java.lang.Short, short      数据库兼容的 NUMERIC 或 SHORT INTEGER
+IntegerTypeHandler          java.lang.Integer, int      数据库兼容的 NUMERIC 或 INTEGER
+LongTypeHandler             java.lang.Long, long        数据库兼容的 NUMERIC 或 LONG INTEGER
+FloatTypeHandler            java.lang.Float, float      数据库兼容的 NUMERIC 或 FLOAT
+DoubleTypeHandler           java.lang.Double, double    数据库兼容的 NUMERIC 或 DOUBLE
+BigDecimalTypeHandler       java.math.BigDecimal        数据库兼容的 NUMERIC 或 DECIMAL
+StringTypeHandler           java.lang.String            CHAR, VARCHAR
+ClobReaderTypeHandler       java.io.Reader              -
+ClobTypeHandler             java.lang.String            CLOB, LONGVARCHAR
+NStringTypeHandler          java.lang.String            NVARCHAR, NCHAR
+NClobTypeHandler            java.lang.String            NCLOB
+BlobInputStreamTypeHandler  java.io.InputStream         -
+ByteArrayTypeHandler        byte[]                      数据库兼容的字节流类型
+BlobTypeHandler             byte[]                      BLOB, LONGVARBINARY
+DateTypeHandler             java.util.Date              TIMESTAMP
+DateOnlyTypeHandler         java.util.Date              DATE
+TimeOnlyTypeHandler         java.util.Date              TIME
+SqlTimestampTypeHandler     java.sql.Timestamp          TIMESTAMP
+SqlDateTypeHandler          java.sql.Date               DATE
+SqlTimeTypeHandler          java.sql.Time               TIME
+ObjectTypeHandler           Any                         OTHER 或未指定类型
+EnumTypeHandler             Enumeration Type            VARCHAR-任何兼容的字符串类型，存储枚举的名称（而不是索引）
+EnumOrdinalTypeHandler      Enumeration Type            任何兼容的 NUMERIC 或 DOUBLE 类型，存储枚举的索引（而不是名称）。
+InstantTypeHandler          java.time.Instant           TIMESTAMP
+LocalDateTimeTypeHandler    java.time.LocalDateTime     TIMESTAMP
+LocalDateTypeHandler        java.time.LocalDate         DATE
+LocalTimeTypeHandler        java.time.LocalTime         TIME
+OffsetDateTimeTypeHandler   java.time.OffsetDateTime    TIMESTAMP
+OffsetTimeTypeHandler       java.time.OffsetTime        TIME
+ZonedDateTimeTypeHandler    java.time.ZonedDateTime     TIMESTAMP
+YearTypeHandler             java.time.Year              INTEGER
+MonthTypeHandler            java.time.Month             INTEGER
+YearMonthTypeHandler        java.time.YearMonth         VARCHAR or LONGVARCHAR
+JapaneseDateTypeHandler     java.time.chrono.JapaneseDate   DATE
+
+我们可以重写类型处理器或者创建自己的类型处理器来处理不支持的或非标准的类型。
+通过实现org.apache.ibatis.type.TypeHandler接口，或者继承一个很便利的类org.apache.ibatis.type.BaseTypeHandler，
+然后可选择性的映射到一个JDBC类型。如下：
+@MappedJdbcTypes(JdbcType.VARCHAR)
+public class ExampleTypeHandler extends BaseTypeHandler<String> {
+
+  @Override
+  public void setNonNullParameter(PreparedStatement ps, int i, String parameter, JdbcType jdbcType) throws SQLException {
+    ps.setString(i, parameter);
+  }
+
+  @Override
+  public String getNullableResult(ResultSet rs, String columnName) throws SQLException {
+    return rs.getString(columnName);
+  }
+
+  @Override
+  public String getNullableResult(ResultSet rs, int columnIndex) throws SQLException {
+    return rs.getString(columnIndex);
+  }
+
+  @Override
+  public String getNullableResult(CallableStatement cs, int columnIndex) throws SQLException {
+    return cs.getString(columnIndex);
+  }
+}
+然后再这个配置文件中配置这个类型处理器即可：
+<typeHandlers>
+  <typeHandler handler="org.mybatis.example.ExampleTypeHandler"/>
+</typeHandlers>
+使用这个类型处理器会覆盖已经存在的处理Java的String类型属性和VARCHAR参数及结果的类型处理器。
+mybatis不会窥探数据库元信息来决定使用哪种类型，所以我们必须在参数和结果映射中指明那是CARCHAR类型的字段，以使其能够绑定到正确的类型处理器上。因为mybatis知道语句执行才清楚数据类型。
+
+通过类型处理器的泛型，mybatis可以得知类型处理器处理的Java类型，不过这种行为可以通过两种方法改变：
+>在类型处理器的配置元素上增加一个javaType属性（如：javaType="String"）
+>在类型处理器的类上增加一个@MappedTypes注解来指定与其关联的Java类型列表。如果这两种同时指定，注解不起作用。
+
+可以通过两种方式来指定被关联的JDBC类型：
+>在类型处理器的配置元素上增加一个jdbcType属性（如：jdbcType="VARCHAR"）
+>在类型处理器的类上增加一个@MappedJdbcTypes注解来指定与其关联的JDBC类型列表。如果这两种同时指定，注解不起作用。
+
+当决定在ResultMap中使用某一TypeHandler时，此时java类型是已知的（从结果类型中获得），但是JDBC类型是未知的。
+因此mybatis使用 javaType=[TheJavaType],jdbcType=null 的组合来选择一个TypeHandler。这意味着使用@MappedJdbcTypes注解可以限制TypeHandler的范围，
+同时除非显示的设置，否则TypeHandler在ResultMap中将是无效的。如果希望ResultMap中使用TypeHandler，那么设置@MappedJdbcTypes注解的includeNullJdbcType=true即可。
+然而在从3.4.0开始，如果只有一个注册的TypeHandler来处理Java类型，那么它将是ResultMap使用java类型时的默认值（即使没有includeNullJdbcType=true）。
+
+也可以让mybatis为我们查找类型处理器：
+<typeHandlers>
+  <package name="org.mybatis.example"/>
+</typeHandlers>
+需要注意的是：使用自动检索功能的时候，只能通过注解的方式来指定JDBC的类型。
+
+你可以创建一个能够处理多个类的泛型类型处理器。为了使用泛型类型处理器，需要增加一个接受该类的class作为参数的构造器，这样在构造一个类型处理器的时候Mybatis就会穿入一个具体的类。
+//GenericTypeHandler.java
+public class GenericTypeHandler<E extends MyObject> extends BaseTypeHandler<E> {//这个地方好别扭，看不懂
+
+  private Class<E> type;
+
+  public GenericTypeHandler(Class<E> type) {
+    if (type == null) throw new IllegalArgumentException("Type argument cannot be null");
+    this.type = type;
+  }
+  ...
+
+EnmuTypeHandler和EnumOrdinalTypeHandler都是泛型处理器
+
+处理枚举类型
+如果想要映射枚举类型，就需要在上面的两个处理器中选择一个来使用。
+如果我们想存储取近似值时用到的舍入模式。默认情况下，Mybatis会利用EnmuTypeHandler来吧Enum值转换成对应的名字。
+注意：EnmuTypeHandler在某种意义上来说是比较特别的，其他的处理器只针对某个特定的类，而它处理任意继承了Enum的类。
+不过我们肯定不是想存储名字，相反我们的DBA会坚持使用整形代码。那样也是轻而易举的：在配置文件中把EnumOrdinalTypeHandler加到typeHandlers中即可，这样每个RoundingMode将通过他们的序数值来映射成对应的整型。
+<typeHandlers>
+  <typeHandler handler="org.apache.ibatis.type.EnumOrdinalTypeHandler" javaType="java.math.RoundingMode"/>
+</typeHandlers>
+
+但是怎样能将同样的Enum即映射成字符串又映射成整型？
+自动映射器（atuo-mapper）会自动的选用EnumOrdinalTypeHandler来处理，所以如果我们想用普通的EnmuTypeHandler，就必须要显示的为那些SQL语句设置要使用的类型处理器。
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="org.apache.ibatis.submitted.rounding.Mapper">
+	<resultMap type="org.apache.ibatis.submitted.rounding.User" id="usermap">
+		<id column="id" property="id"/>
+		<result column="name" property="name"/>
+		<result column="funkyNumber" property="funkyNumber"/>
+		<result column="roundingMode" property="roundingMode"/>
+	</resultMap>
+
+	<select id="getUser" resultMap="usermap">
+		select * from users
+	</select>
+	<insert id="insert">
+	    insert into users (id, name, funkyNumber, roundingMode) values (
+	    	#{id}, #{name}, #{funkyNumber}, #{roundingMode}
+	    )
+	</insert>
+	
+	<resultMap type="org.apache.ibatis.submitted.rounding.User" id="usermap2">
+		<id column="id" property="id"/>
+		<result column="name" property="name"/>
+		<result column="funkyNumber" property="funkyNumber"/>
+		<result column="roundingMode" property="roundingMode" typeHandler="org.apache.ibatis.type.EnumTypeHandler"/>
+	</resultMap>
+	<select id="getUser2" resultMap="usermap2">
+		select * from users2
+	</select>
+	<insert id="insert2">
+	    insert into users2 (id, name, funkyNumber, roundingMode) values (
+	    	#{id}, #{name}, #{funkyNumber}, #{roundingMode, typeHandler=org.apache.ibatis.type.EnumTypeHandler}
+	    )
+	</insert>
+
+</mapper>
+
+注意：这里的select语句强制使用resultMap来代替resultType。
+
+
+
+
+================================================================================
+==================================objectFactory==================================
+MyBatis每次创建结果对象的新实例时，它都会使用一个对象工厂（ObjectFactory）实例来完成。默认的对象工厂需要做的仅仅是实例化目标类，要么通过默认的构造方法，要么在参数映射存在的时候通过参数构造方法来实例化。
+如果想覆盖对象工厂的默认行为，可以通过创建自己的对象工厂实现，如下：
+// ExampleObjectFactory.java
+public class ExampleObjectFactory extends DefaultObjectFactory {
+  public Object create(Class type) {
+    return super.create(type);
+  }
+  public Object create(Class type, List<Class> constructorArgTypes, List<Object> constructorArgs) {
+    return super.create(type, constructorArgTypes, constructorArgs);
+  }
+  public void setProperties(Properties properties) {
+    super.setProperties(properties);
+  }
+  public <T> boolean isCollection(Class<T> type) {
+    return Collection.class.isAssignableFrom(type);
+  }}
+
+然後在配置文件中配置自定義的工廠即可
+<objectFactory type="org.mybatis.example.ExampleObjectFactory">
+  <property name="someProperty" value="100"/>
+</objectFactory>
+
+ObjectFactory接口簡單，它包含兩個創建用的方法，一個是處理默認構造方法的，另外一個是處理帶參數的構造方法的。最後，setProperties方法可以被用來配置ObjectFactory，在初始化你的ObjectFactory實例后，
+objectFactory元素体中定义的属性会被传递给setProperties方法。
+
+
+
+================================================================================
+==================================plugins=======================================
+MyBatis 允许你在已映射语句执行过程中的某一点进行拦截调用。默认情况下，MyBatis 允许使用插件来拦截的方法调用包括：
+
+Executor (update, query, flushStatements, commit, rollback, getTransaction, close, isClosed)
+ParameterHandler (getParameterObject, setParameters)
+ResultSetHandler (handleResultSets, handleOutputParameters)
+StatementHandler (prepare, parameterize, batch, update, query)
+
+这些类中方法的细节可以通过查看每个方法的签名来发现，或者直接查看 MyBatis 发行包中的源代码。 如果你想做的不仅仅是监控方法的调用，那么你最好相当了解要重写的方法的行为。 因为如果在试图修改或重写已有方法的行为的时候，你很可能在破坏 MyBatis 的核心模块。 这些都是更低层的类和方法，所以使用插件的时候要特别当心。
+通过 MyBatis 提供的强大机制，使用插件是非常简单的，只需实现 Interceptor 接口，并指定想要拦截的方法签名即可。
+// ExamplePlugin.java
+@Intercepts({@Signature(
+  type= Executor.class,
+  method = "update",
+  args = {MappedStatement.class,Object.class})})
+public class ExamplePlugin implements Interceptor {
+  public Object intercept(Invocation invocation) throws Throwable {
+    return invocation.proceed();
+  }
+  public Object plugin(Object target) {
+    return Plugin.wrap(target, this);
+  }
+  public void setProperties(Properties properties) {
+  }
+}
+
+然后在mybatis的配置文件中配置即可：
+<plugins>
+  <plugin interceptor="org.mybatis.example.ExamplePlugin">
+    <property name="someProperty" value="100"/>
+  </plugin>
+</plugins>
+
+上面的插件将会拦截在 Executor 实例中所有的 “update” 方法调用， 这里的 Executor 是负责执行低层映射语句的内部对象。
+除了用插件来修改 MyBatis 核心行为之外，还可以通过完全覆盖配置类来达到目的。只需继承后覆盖其中的每个方法，再把它传递到 SqlSessionFactoryBuilder.build(myConfig) 方法即可。再次重申，这可能会严重影响 MyBatis 的行为，务请慎之又慎。
+
+
+
+=====================================================================================
+==================================environments=======================================
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ -->
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+
+ 
+ 
+ 
+ 
+ 
+ 
