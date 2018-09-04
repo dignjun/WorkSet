@@ -12,6 +12,10 @@
         <setting name="cacheEnabled" value="false"/>
         <setting name="lazyLoadingEnabled" value="false"/>
     </settings>
+    <typeAliases>
+        <typeAlias type="com.chinatvpay.bean.User_tb" alias="user_tb"/>
+        <typeAlias type="com.chinatvpay.bean.User" alias="user"/>
+    </typeAliases>
     <typeHandlers>
     	<typeHandler handler="com.chinatvpay.type.hander.MyTypeHandler"/>
     </typeHandlers>
@@ -623,7 +627,10 @@ public interface DatabaseIdProvider {
   <package name="org.mybatis.builder"/>
 </mappers>
 
-
+属性                       描述
+id          当前命名空间中的一个唯一标识，用于标识一个result map.
+type        类的完全限定名, 或者一个类型别名 (内置的别名可以参考上面的表格).
+autoMapping 如果设置这个属性，MyBatis将会为这个ResultMap开启或者关闭自动映射。这个属性会覆盖全局的属性 autoMappingBehavior。默认值为：unset。
 
 
 
