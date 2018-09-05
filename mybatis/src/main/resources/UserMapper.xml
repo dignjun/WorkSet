@@ -378,7 +378,7 @@ ResultMap 最优秀的地方在于，虽然你已经对它相当了解了，但�
 </select>
 
 
-高级结果映射
+=======高级结果映射=======
 MyBatis 创建的一个想法是：数据库不可能永远是你所想或所需的那个样子。 我们希望每个数据库都具备良好的第三范式或 BCNF 范式，可惜它们不总都是这样。 如果有一个独立且完美的数据库映射模式，所有应用程序都可以使用它，那就太好了，但可惜也没有。 ResultMap 就是 MyBatis 对这个问题的答案。
 对下面的结果进行映射：
 <select id="selectBlogDetails" resultMap="detailedBlogResultMap">
@@ -448,7 +448,7 @@ MyBatis 创建的一个想法是：数据库不可能永远是你所想或所需
 
 resultMap 元素有很多子元素和一个值得讨论的结构。 下面是 resultMap 元素的概念视图。
 
-resultMap
+=======resultMap=======
 	constructor - 用于在实例化类时，注入结果到构造方法中
 	   idArg - ID 参数;标记出作为 ID 的结果可以帮助提高整体性能
 	   arg - 将被注入到构造方法的一个普通结果
@@ -462,39 +462,124 @@ resultMap
 	   case – 基于某些值的结果映射
 	               嵌套结果映射 – 一个 case 也是一个映射它本身的结果,因此可以包含很多相 同的元素，或者它可以参照一个外部的 resultMap。
 
+属性			描述
+id			当前命名空间中的一个唯一标识，用于标识一个result map.
+type		类的完全限定名, 或者一个类型别名 (内置的别名可以参考上面的表格).
+autoMapping	如果设置这个属性，MyBatis将会为这个ResultMap开启或者关闭自动映射。这个属性会覆盖全局的属性 autoMappingBehavior。默认值为：unset。
+
+=======id & result=======
+
+<id property="id" column="post_id"/>
+<result property="subject" column="post_subject"/>
+
+这些是结果映射最基本的内容。id 和 result 都将一个列的值映射到一个简单数据类型(字符串,整型,双精度浮点数,日期等)的属性或字段。
+这两者之间的唯一不同是， id 表示的结果将是对象的标识属性，这会在比较对象实例时用到。 这样可以提高整体的性能，尤其是缓存和嵌套结果映射(也就是联合映射)的时候。
+两个元素都有一些属性:
+
+属性			描述
+property	映射到列结果的字段或属性。如果用来匹配的 JavaBeans 存在给定名字的属性，那么它将会被使用。否则 MyBatis 将会寻找给定名称 property 的字段。 无论是哪一种情形，你都可以使用通常的点式分隔形式进行复杂属性导航。比如,你可以这样映射一些简单的东西: “username” ,或者映射到一些复杂的东西: “address.street.number” 。
+column		数据库中的列名,或者是列的别名。一般情况下，这和 传递给 resultSet.getString(columnName) 方法的参数一样。
+javaType	一个 Java 类的完全限定名,或一个类型别名(参考上面内建类型别名 的列表) 。如果你映射到一个 JavaBean,MyBatis 通常可以断定类型。 然而,如果你映射到的是 HashMap,那么你应该明确地指定 javaType 来保证期望的行为。
+jdbcType	JDBC 类型，所支持的 JDBC 类型参见这个表格之后的“支持的 JDBC 类型”。 只需要在可能执行插入、更新和删除的允许空值的列上指定 JDBC 类型。这是 JDBC 的要求而非 MyBatis 的要求。如果你直接面向 JDBC 编程,你需要对可能为 null 的值指定这个类型。
+typeHandler	我们在前面讨论过的默认类型处理器。使用这个属性,你可以覆盖默 认的类型处理器。这个属性值是一个类型处理 器实现类的完全限定名，或者是类型别名。
+
+支持的 JDBC 类型
+
+为了未来的参考,MyBatis 通过包含的 jdbcType 枚举型,支持下面的 JDBC 类型。
+
+BIT			FLOAT	CHAR		TIMESTAMP		OTHER		UNDEFINED
+TINYINT		REAL	VARCHAR		BINARY			BLOB		NVARCHAR
+SMALLINT	DOUBLE	LONGVARCHAR	VARBINARY		CLOB		NCHAR
+INTEGER		NUMERIC	DATE		LONGVARBINARY	BOOLEAN		NCLOB
+BIGINT		DECIMAL	TIME		NULL			CURSOR		ARRAY
+
+=======构造方法=======
+通过修改对象属性的方式，可以满足大多数的数据传输对象(Data Transfer Object,DTO)以及绝大部分领域模型的要求。 但有些情况下你想使用不可变类。 通常来说，很少或基本不变的、包含引用或查询数 据的表，很适合使用不可变类。 构造方法注入允许你在初始化时 为类设置属性的值，而不用暴露出公有方法。MyBatis 也支持私有属性和私有 JavaBeans 属 性来达到这个目的，但有一些人更青睐于构造方法注入。constructor 元素就是为此而生的。
+看看下面这个构造方法:
+public class User {
+   //...
+   public User(Integer id, String username, int age) {
+     //...
+   }
+   //...
+}
+
+为了将结果注入构造方法，MyBatis需要通过某种方式定位相应的构造方法。 在下面的例子中，MyBatis搜索一个声明了三个形参的的构造方法，以 java.lang.Integer, java.lang.String and int 的顺序排列。
+<constructor>
+   <idArg column="id" javaType="int"/>
+   <arg column="username" javaType="String"/>
+   <arg column="age" javaType="_int"/>
+</constructor>
+
+当你在处理一个带有多个形参的构造方法时，很容易在保证 arg 元素的正确顺序上出错。 从版本 3.4.3 开始，可以在指定参数名称的前提下，以任意顺序编写 arg 元素。 为了通过名称来引用构造方法参数，你可以添加 @Param 注解，或者使用 '-parameters' 编译选项并启用 useActualParamName 选项（默认开启）来编译项目。 下面的例子对于同一个构造方法依然是有效的，尽管第二和第三个形参顺序与构造方法中声明的顺序不匹配。
+<constructor>
+   <idArg column="id" javaType="int" name="id" />
+   <arg column="age" javaType="_int" name="age" />
+   <arg column="username" javaType="String" name="username" />
+</constructor>
+如果类中存在名称和类型相同的属性，那么可以省略 javaType 。
+剩余的属性和规则和普通的 id 和 result 元素是一样的。
+
+属性			描述
+column		数据库中的列名,或者是列的别名。一般情况下，这和 传递给 resultSet.getString(columnName) 方法的参数一样。
+javaType	一个 Java 类的完全限定名,或一个类型别名(参考上面内建类型别名的列表)。 如果你映射到一个 JavaBean,MyBatis 通常可以断定类型。然而,如 果你映射到的是 HashMap,那么你应该明确地指定 javaType 来保证期望的 行为。
+jdbcType	JDBC 类型，所支持的 JDBC 类型参见这个表格之前的“支持的 JDBC 类型”。 只需要在可能执行插入、更新和删除的允许空值的列上指定 JDBC 类型。这是 JDBC 的要求而非 MyBatis 的要求。如果你直接面向 JDBC 编程,你需要对可能为 null 的值指定这个类型。
+typeHandler	我们在前面讨论过的默认类型处理器。使用这个属性,你可以覆盖默 认的类型处理器。这个属性值是一个类型处理 器实现类的完全限定名，或者是类型别名。
+select		用于加载复杂类型属性的映射语句的 ID,它会从 column 属性中指定的列检索数据，作为参数传递给此 select 语句。具体请参考 Association 标签。
+resultMap	ResultMap 的 ID，可以将嵌套的结果集映射到一个合适的对象树中，功能和 select 属性相似，它可以实现将多表连接操作的结果映射成一个单一的ResultSet。这样的ResultSet将会将包含重复或部分数据重复的结果集正确的映射到嵌套的对象树中。为了实现它, MyBatis允许你 “串联” ResultMap,以便解决嵌套结果集的问题。想了解更多内容，请参考下面的Association元素。
+name		构造方法形参的名字。从3.4.3版本开始，通过指定具体的名字，你可以以任意顺序写入arg元素。参看上面的解释。
 
 
+=======关联=======
+<association property="author" column="blog_author_id" javaType="Author">
+  <id property="id" column="author_id"/>
+  <result property="username" column="author_username"/>
+</association>
+关联元素处理“有一个”类型的关系。比如,在我们的示例中,一个博客有一个用户。 关联映射就工作于这种结果之上。你指定了目标属性,来获取值的列,属性的 java 类型(很 多情况下 MyBatis 可以自己算出来) ,如果需要的话还有 jdbc 类型,如果你想覆盖或获取的 结果值还需要类型控制器。
+关联中不同的是你需要告诉 MyBatis 如何加载关联。MyBatis 在这方面会有两种不同的 方式:
+==嵌套查询:通过执行另外一个 SQL 映射语句来返回预期的复杂类型。
+==嵌套结果:使用嵌套结果映射来处理重复的联合结果的子集。首先,然让我们来查看这个元素的属性。所有的你都会看到,它和普通的只由 select 和 resultMap 属性的结果映射不同。
 
+属性			描述
+property	映射到列结果的字段或属性。如果用来匹配的 JavaBeans 存在给定名字的属性，那么它将会被使用。 否则 MyBatis 将会寻找与给定名称相同的字段。 这两种情形你可以使用通常点式的复杂属性导航。比如,你可以这样映射 一 些 东 西 :“ username ”, 或 者 映 射 到 一 些 复 杂 的 东 西 : “address.street.number” 。
+javaType	一个 Java 类的完全限定名,或一个类型别名(参考上面内建类型别名的列 表) 。如果你映射到一个 JavaBean,MyBatis 通常可以断定类型。然而,如 javaType 果你映射到的是 HashMap,那么你应该明确地指定 javaType 来保证所需的 行为。
+jdbcType	在这个表格之前的所支持的 JDBC 类型列表中的类型。JDBC 类型是仅仅 需要对插入, 更新和删除操作可能为空的列进行处理。这是 JDBC 的需要, jdbcType 而不是 MyBatis 的。如果你直接使用 JDBC 编程,你需要指定这个类型-但 仅仅对可能为空的值。
+typeHandler	我们在前面讨论过默认的类型处理器。使用这个属性,你可以覆盖默认的 typeHandler 类型处理器。 这个属性值是类的完全限定名或者是一个类型处理器的实现, 或者是类型别名。
 
+=======关联的嵌套查询=======
+属性			描述
+column		来自数据库的列名,或重命名的列标签。这和通常传递给 resultSet.getString(columnName)方法的字符串是相同的。 column 注 意 : 要 处 理 复 合 主 键 , 你 可 以 指 定 多 个 列 名 通 过 column= ” {prop1=col1,prop2=col2} ” 这种语法来传递给嵌套查询语 句。这会引起 prop1 和 prop2 以参数对象形式来设置给目标嵌套查询语句。
+select		另外一个映射语句的 ID,可以加载这个属性映射需要的复杂类型。获取的 在列属性中指定的列的值将被传递给目标 select 语句作为参数。表格后面 有一个详细的示例。 select 注 意 : 要 处 理 复 合 主 键 , 你 可 以 指 定 多 个 列 名 通 过 column= ” {prop1=col1,prop2=col2} ” 这种语法来传递给嵌套查询语 句。这会引起 prop1 和 prop2 以参数对象形式来设置给目标嵌套查询语句。
+fetchType	可选的。有效值为 lazy和eager。 如果使用了，它将取代全局配置参数lazyLoadingEnabled。
 
+示例:
+<resultMap id="blogResult" type="Blog">
+  <association property="author" column="author_id" javaType="Author" select="selectAuthor"/>
+</resultMap>
 
+<select id="selectBlog" resultMap="blogResult">
+  SELECT * FROM BLOG WHERE ID = #{id}
+</select>
 
+<select id="selectAuthor" resultType="Author">
+  SELECT * FROM AUTHOR WHERE ID = #{id}
+</select>
 
+我们有两个查询语句:一个来加载博客,另外一个来加载作者,而且博客的结果映射描 述了“selectAuthor”语句应该被用来加载它的 author 属性。
+其他所有的属性将会被自动加载,假设它们的列和属性名相匹配。
+这种方式很简单, 但是对于大型数据集合和列表将不会表现很好。 问题就是我们熟知的 “N+1 查询问题”。概括地讲,N+1 查询问题可以是这样引起的:
+你执行了一个单独的 SQL 语句来获取结果列表(就是“+1”)。
+对返回的每条记录,你执行了一个查询语句来为每个加载细节(就是“N”)。
+这个问题会导致成百上千的 SQL 语句被执行。这通常不是期望的。
+MyBatis 能延迟加载这样的查询就是一个好处,因此你可以分散这些语句同时运行的消 耗。然而,如果你加载一个列表,之后迅速迭代来访问嵌套的数据,你会调用所有的延迟加 载,这样的行为可能是很糟糕的。
+所以还有另外一种方法。
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+=======关联的嵌套结果=======
+属性				描述
+resultMap		这是结果映射的 ID,可以映射关联的嵌套结果到一个合适的对象图中。这 是一种替代方法来调用另外一个查询语句。这允许你联合多个表来合成到 resultMap 一个单独的结果集。这样的结果集可能包含重复,数据的重复组需要被分 解,合理映射到一个嵌套的对象图。为了使它变得容易,MyBatis 让你“链 接”结果映射,来处理嵌套结果。一个例子会很容易来仿照,这个表格后 面也有一个示例。
+columnPrefix	当连接多表时，你将不得不使用列别名来避免ResultSet中的重复列名。指定columnPrefix允许你映射列名到一个外部的结果集中。 请看后面的例子。
+notNullColumn	默认情况下，子对象仅在至少一个列映射到其属性非空时才创建。 通过对这个属性指定非空的列将改变默认行为，这样做之后Mybatis将仅在这些列非空时才创建一个子对象。 可以指定多个列名，使用逗号分隔。默认值：未设置(unset)。
+autoMapping		如果使用了，当映射结果到当前属性时，Mybatis将启用或者禁用自动映射。 该属性覆盖全局的自动映射行为。 注意它对外部结果集无影响，所以在select or resultMap属性中这个是毫无意义的。 默认值：未设置(unset)。
 
 
 
