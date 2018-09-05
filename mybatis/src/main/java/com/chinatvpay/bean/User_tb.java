@@ -6,7 +6,7 @@ public class User_tb {
 	private String username;
 	private String password;
 	
-	
+	public User_tb(){}
 	public User_tb(int id, String username, String password) {
 		super();
 		this.id = id;
@@ -31,6 +31,11 @@ public class User_tb {
 	}
 	public void setPassword(String password) {
 		this.password = password;
+	}
+	@Override
+	public String toString() {
+		return "User_tb [id=" + id + ", username=" + username + ", password="
+				+ password + "]";
 	}
 	
 }

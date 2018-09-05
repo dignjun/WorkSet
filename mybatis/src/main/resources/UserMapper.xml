@@ -8,11 +8,28 @@
         select id, name, city, age from student where id = #{id}
     </select>
     
+    
+    <!-- oracle这地方的批量插入真费劲方式一，特别注意foreach元素标签中的写法 -->
     <insert id="insertUser_tb">
-        insert into user_tb (id,username,password) values 
-	    <foreach item="user_tb" collection="list" index="index" separator="union all">
-	       (#{user_tb.id},#{user_tb.username},#{user_tb.password})
+        insert into user_tb (id,username,password)  
+	    <foreach item="item" collection="list" separator="union all">
+	       (select #{item.id},#{item.username},#{item.password} from dual)
 	    </foreach>
+    </insert>
+    <!-- oracle批量插入数据实现的方式二 ，和第一种写法差别还是非常大的 -->
+    <insert id="insertUser_tb2">
+        insert all 
+        <foreach item="item" collection="list">
+           into user_tb (id,username,password) values 
+           (#{item.id},#{item.username},#{item.password})
+        </foreach>
+        select 1 from dual
+    </insert>
+    
+    
+    <insert id="insertOneUser_tb" parameterType="user_tb">
+        insert into user_tb (id,username,password) values 
+           (#{id},#{username},#{password})
     </insert>
     
     

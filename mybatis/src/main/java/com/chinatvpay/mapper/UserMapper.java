@@ -11,4 +11,8 @@ public interface UserMapper {
 	
 	public void insertUser_tb(List<User_tb> list);
 	
+	public void insertUser_tb2(List<User_tb> list);
+	
+	public void insertOneUser_tb(User_tb user_tb);
+	
 }

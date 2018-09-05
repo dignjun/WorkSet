@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+ "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+ <!-- 这个mapper的文件名和接口文件不一样，使用包扫描加载 -->
+<mapper namespace="com.chinatvpay.mapper.User_tbMapper">
+
+    <!-- 入参的string类型是基本类型，可以不用指定，这里的占位符中的名字是可以随意指定的 -->
+    <select id="findUser_tbByName" resultType="user_tb">
+        select * from user_tb where username = #{aaaa}
+    </select>
+    
+    
+    
+    <!-- string类型占位符固定参数的写法，奇怪的是上面的案例正常可以使用啊.难道是使用了动态sql的原因 -->
+    <!-- 原因:Mybatis默认采用ONGL解析参数，所以会自动采用对象树的形式取 string.xxx 值，如果没在在方法中定义,则会抛异常报错。 -->
+    <!-- 或者在接口中使用@Param注解声明这个占位符的名字，然后这里可以使用相应的名字。否则只能是下面的写法 -->
+    <!-- 如果是对象的话，是可以在占位符中使用属性值获取的 -->
+    <select id="findUser_tbByNameLike" resultType="user_tb">
+        select * from user_tb
+        <if test="_parameter != null">
+            where username like #{_parameter}
+        </if>
+        <!-- 使用注解之后，好像并没有用QAQ -->
+        <!-- <if test="name != null">
+            where username like #{name}
+        </if> -->
+    </select>
+    
+    
+    
+    <!-- <cache></cache>
+    <cache-ref namespace=""/>
+    <delete id="">
+    </delete>
+    <parameterMap type="" id="">
+    </parameterMap>
+    <sql id="">
+    </sql>
+    <update id="">
+    </update> -->
+</mapper>

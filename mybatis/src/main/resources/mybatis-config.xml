@@ -31,7 +31,15 @@
         </environment>
     </environments>
     <mappers>
-        <mapper resource="UserMapper.xml" />
+        <!-- 直接导入映射文件 -->
+         <mapper resource="UserMapper.xml" />
+         <mapper resource="mapper/User_tbMapper.xml" />
+       
+        <!-- 使用接口，映射文件需要和接口放在一起，文件名相同 -->
+        <!-- <mapper class="com.chinatvpay.mapper.User_tbMapper"/> -->
+       
+        <!-- 包扫描需要将接口和映射器放在同一个包中，文件名必须要相同才可以 -->
+        <!-- <package name="com.chinatvpay.mapper"/> -->
     </mappers>
 </configuration>
 
@@ -615,24 +623,32 @@ public interface DatabaseIdProvider {
   <mapper url="file:///var/mappers/PostMapper.xml"/>
 </mappers>
 
-// 使用映射器接口实现类的完全限定类名
+// 使用映射器接口实现类的完全限定类名(注意这里需要将mapper.xml和接口文件同名且在同一个包目录中)
 <mappers>
   <mapper class="org.mybatis.builder.AuthorMapper"/>
   <mapper class="org.mybatis.builder.BlogMapper"/>
   <mapper class="org.mybatis.builder.PostMapper"/>
 </mappers>
 
-// 将包内的映射器接口实现全部注册为映射器
+// 将包内的映射器接口实现全部注册为映射器（需要将sql配置文件和接口放到同一目录下）
 <mappers>
   <package name="org.mybatis.builder"/>
 </mappers>
 
-属性                       描述
-id          当前命名空间中的一个唯一标识，用于标识一个result map.
-type        类的完全限定名, 或者一个类型别名 (内置的别名可以参考上面的表格).
-autoMapping 如果设置这个属性，MyBatis将会为这个ResultMap开启或者关闭自动映射。这个属性会覆盖全局的属性 autoMappingBehavior。默认值为：unset。
 
+注意：这里的mapper接口和mapper映射器的位置
 
+第一种：注册sql映射文件
+   <mapper resource="com/spldeolin/mapper/UserMapper.xml" />
+
+第二种：注册接口   sql映射文件必须与接口同名，并且放在同一目录下
+   <mapper class="com.spldeolin.mapper.UserMapper" />
+
+第三种：注册基于注解的接口  基于注解   没有sql映射文件，所有的sql都是利用注解写在接口上
+   <mapper class="com.spldeolin.mapper.TeacherMapper" />
+
+第四种：批量注册  需要将sql配置文件和接口放到同一目录下
+   <package name="com.spldeolin.mapper" />
 
 
 
