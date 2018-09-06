@@ -1,0 +1,195 @@
+第二章 入门
+本章将会以简略的步骤告诉你如何安装和创建 MyBatis-Spring,并构建一个简单的数据 访问事务性的应用程序。
+
+Installation
+要使用 MyBatis-Spring 模块,你只需要包含 mybatis-spring-x.x.x.jar 文 件就可以了,并在类路径中加入相关的依赖。
+
+如果你使用 Maven,那么在 pom.xml 中加入下面的代码即可:
+
+<dependency>
+  <groupId>org.mybatis</groupId>
+  <artifactId>mybatis-spring</artifactId>
+  <version>x.x.x</version>
+</dependency>
+
+全部的依赖如下:
+<dependencies>
+    
+       <!-- 整合依赖 -->
+        <dependency>
+            <groupId>org.mybatis</groupId>
+            <artifactId>mybatis-spring</artifactId>
+            <version>1.3.1</version>
+        </dependency>
+        <dependency>
+            <groupId>org.mybatis</groupId>
+            <artifactId>mybatis</artifactId>
+            <version>3.2.8</version>
+        </dependency>
+        
+        <!-- spring依赖 -->
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-beans</artifactId>
+            <version>4.3.2.RELEASE</version>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-jdbc</artifactId>
+            <version>4.3.2.RELEASE</version>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-tx</artifactId>
+            <version>4.3.2.RELEASE</version>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-test</artifactId>
+            <version>4.3.2.RELEASE</version>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-context</artifactId>
+            <version>4.3.2.RELEASE</version>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-core</artifactId>
+            <version>4.3.2.RELEASE</version>
+        </dependency>
+        
+        <!-- 连接池 -->
+        <dependency>
+            <groupId>com.alibaba</groupId>
+            <artifactId>druid</artifactId>
+            <version>1.0.18</version>
+        </dependency>
+        
+        <!-- 数据库驱动 -->
+        <dependency>
+            <groupId>com.oracle</groupId>
+            <artifactId>ojdbc14</artifactId>
+            <version>10.2.0.4.0</version>
+        </dependency>
+</dependencies>
+
+Quick Setup
+
+要和 Spring 一起使用 MyBatis,你需要在 Spring 应用上下文中定义至少两样东西:一个 SqlSessionFactory 和至少一个数据映射器类。
+在 MyBatis-Spring 中,SqlSessionFactoryBean 是用于创建 SqlSessionFactory 的。要 配置这个工厂 bean,放置下面的代码在 Spring 的 XML 配置文件中:
+
+<bean id="sqlSessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean">
+  <property name="dataSource" ref="dataSource" />
+</bean>
+
+要注意 SqlSessionFactory 需要一个 DataSource(数据源,译者注) 。这可以是任意 的 DataSource,配置它就和配置其它 Spring 数据库连接一样。
+数据源示例如下（这里使用的数据库是oracle）：
+    <!-- 读取配置信息 -->
+    <context:property-placeholder location="classpath:db.properties" />
+
+    <!-- 配置数据源 -->
+    <!-- Hibernate 数据源 druid -->
+    <bean id="dataSource" class="com.alibaba.druid.pool.DruidDataSource"
+        init-method="init" destroy-method="close">
+        <!-- 数据库基本信息配置 -->
+        <property name="driverClassName" value="${druid.driverClassName}" />
+        <property name="url" value="${druid.url}" />
+        <property name="username" value="${druid.username}" />
+        <property name="password" value="${druid.password}" />
+        <!-- 初始化连接数量 -->
+        <property name="initialSize" value="${druid.initialSize}" />
+        <!-- 最大并发连接数 -->
+        <property name="maxActive" value="${druid.maxActive}" />
+        <!-- 最小空闲连接数 -->
+        <property name="minIdle" value="${druid.minIdle}" />
+        <!-- 配置获取连接等待超时的时间 -->
+        <property name="maxWait" value="${druid.maxWait}" />
+        <!-- 超过时间限制是否回收 -->
+        <property name="removeAbandoned" value="${druid.removeAbandoned}" />
+        <!-- 超过时间限制多长； -->
+        <property name="removeAbandonedTimeout" value="${druid.removeAbandonedTimeout}" />
+        <!-- 配置间隔多久才进行一次检测，检测需要关闭的空闲连接，单位是毫秒 -->
+        <property name="timeBetweenEvictionRunsMillis" value="${druid.timeBetweenEvictionRunsMillis}" />
+        <!-- 配置一个连接在池中最小生存的时间，单位是毫秒 -->
+        <property name="minEvictableIdleTimeMillis" value="${druid.minEvictableIdleTimeMillis}" />
+        <!-- 用来检测连接是否有效的sql，要求是一个查询语句 -->
+        <property name="validationQuery" value="${druid.validationQuery}" />
+        <!-- 申请连接的时候检测 -->
+        <property name="testWhileIdle" value="${druid.testWhileIdle}" />
+        <!-- 申请连接时执行validationQuery检测连接是否有效，配置为true会降低性能 -->
+        <property name="testOnBorrow" value="${druid.testOnBorrow}" />
+        <!-- 归还连接时执行validationQuery检测连接是否有效，配置为true会降低性能 -->
+        <property name="testOnReturn" value="${druid.testOnReturn}" />
+        <!-- 打开PSCache，并且指定每个连接上PSCache的大小 -->
+        <property name="poolPreparedStatements" value="${druid.poolPreparedStatements}" />
+        <property name="maxPoolPreparedStatementPerConnectionSize"
+            value="${druid.maxPoolPreparedStatementPerConnectionSize}" />
+        <!--属性类型是字符串，通过别名的方式配置扩展插件，常用的插件有： 监控统计用的filter:stat 日志用的filter:log4j 防御SQL注入的filter:wall -->
+        <property name="filters" value="${druid.filters}" />
+        <!-- <property name="connectionProperties" value="${druid.connectionProperties}" 
+            /> -->
+    </bean>
+    
+使用的db.properties配置如下：
+druid.driverClassName=oracle.jdbc.OracleDriver
+druid.url=jdbc:oracle:thin:@127.0.0.1:1521:xe
+druid.username=DINGJUN
+druid.password=r696697
+
+druid.initialSize=5
+druid.maxActive=10
+druid.minIdle=3
+druid.maxWait=60000
+druid.removeAbandoned=true
+druid.removeAbandonedTimeout=180
+druid.timeBetweenEvictionRunsMillis=60000
+druid.minEvictableIdleTimeMillis=300000
+druid.validationQuery=SELECT 1 FROM DUAL
+druid.testWhileIdle=true
+druid.testOnBorrow=false
+druid.testOnReturn=false
+druid.poolPreparedStatements=true
+druid.maxPoolPreparedStatementPerConnectionSize=50
+druid.filters=stat
+
+
+假设你定义了一个如下的数据 mapper 接口:
+public interface UserMapper {
+  @Select("SELECT * FROM users WHERE id = #{userId}")
+  User getUser(@Param("userId") String userId);
+}
+
+那么可以使用 MapperFactoryBean,像下面这样来把接口加入到 Spring 中:
+
+<bean id="userMapper" class="org.mybatis.spring.mapper.MapperFactoryBean">
+  <property name="mapperInterface" value="org.mybatis.spring.sample.mapper.UserMapper" />
+  <property name="sqlSessionFactory" ref="sqlSessionFactory" />
+</bean>
+
+要注意,所指定的映射器类必须是一个接口,而不是具体的实现类。在这个示例中,注 解被用来指定 SQL 语句,但是 MyBatis 的映射器 XML 文件也可以用。
+一旦配置好,你可以用注入其它任意 Spring 的 bean 相同的方式直接注入映射器到你的 business/service 对象中。MapperFactoryBean 处理 SqlSession 的创建和关闭它。如果使用 了 Spring 的事务,那么当事务完成时,session 将会提交或回滚。最终,任何异常都会被翻 译成 Spring 的 DataAccessException 异常。
+
+调用 MyBatis 数据方法现在只需一行代码:
+public class FooServiceImpl implements FooService {
+
+private UserMapper userMapper;
+
+public void setUserMapper(UserMapper userMapper) {
+  this.userMapper = userMapper;
+}
+
+public User doSomeBusinessStuff(String userId) {
+  return this.userMapper.getUser(userId);
+}
+
+测试（并不是spring的集成测试，在main方法中直接获取通过spring的context对象获取到接口，使用接口的方法就可以进行数据库的操作了。）：
+public static void main(String[] args) {
+    @SuppressWarnings("resource")
+    ClassPathXmlApplicationContext context = new ClassPathXmlApplicationContext("spring.xml");
+    // 没有mybatis的配置文件：mybatis-config.xml和mapper.xml文件的原因有两个。
+    // 第一个是这里mybatis提供了相应的注解来提供映射，第二个就是这个映射是简单的映射。需要说明的是，高级映射还是用得到mapper.xml的
+    UserMapper mapper = context.getBean(UserMapper.class);
+    User user = mapper.getUser("1");
+    System.out.println(user);
+}
