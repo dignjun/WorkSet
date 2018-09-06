@@ -1,0 +1,120 @@
+SqlSessionFactoryBean
+在基本的MyBatis中，session工厂可以使用SQLSessionFactoryBuilder来创建。在MyBatis-Spring中，则使用SQLSessionFactoryBean来替代。
+
+===================================Setup=======================================
+要创建工厂bean，放置下面的代码在Spring的XML配置文件中：
+
+<bean id="sqlSessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean">
+  <property name="dataSource" ref="dataSource" />
+</bean>
+
+要注意的是SqlSessionFactoryBean实现了Spring的FactoryBean接口，说明由Spring最终创建的bean不是SQLSessionFactoryBean本身。
+而是工厂类的getObject（）返回的方法的结果。这种情况下，Spring将会在应用启动时为你创建SqlSessionFactory对象，然后将它以SqlSessionFactory为名字存储。
+在Java中，相同的代码是：
+
+SqlSessionFactoryBean factoryBean = new SqlSessionFactoryBean();
+SqlSessionFactory sessionFactory = factoryBean.getObject();
+
+在一般的MyBatis-Spring用法中，你不需要直接使用SQLSessionFactoryBean或其他对应的SQLSessionFactory。
+相反，session工厂将会被注入到MapperFactoryBean或其它扩展了SqlSessionDaoSupport的DAO（Data Access Object）中。
+
+
+=======================================属性=========================================
+SqlSessionFactory有一个单独的必须的属性，就是JDBC的DataSource。这可以是任意的DateSource，其配置应该和其他Spring数据库连接是一样的。
+一个通用的属性是configLocation，它是用来指定MyBatis的XML配置文件路径的。如果基本的MyBatis配置需要改变，那么这就是一个需要改变它的地方。
+通常这会是<settings>或<typeAliases>的部分。
+
+要注意这个配置文件不需要是一个完整的MyBatis配置。确切的说，任意环境，数据源和MyBatis的事物管理器都会被忽略。SqlSessionFactoryBean会创建它自己的，
+使用这些值定制MyBatis的Environment时是需要的。
+
+如果MyBatis映射器XML文件在和映射器类相同的路径下不存在，那么另一个需要配置文件的原因就是它了。（也就是接口类和映射器文件不再一起需要指定映射器，同时也说明这两个文件放在一起的时候是不用配置mapper.xml文件的）使用这个配置，有两种选择。
+第一是手动在MyBatis的XML配置文件中使用<mappers>部分来指定类路径。
+第二是使用工厂bean的mapperLocations属性。
+
+mapperLocations属性使用一个资源位置的list。这个属性可以用来指定MyBatis的XML映射器文件的位置。它的值可以包含Ant样式来加载一个目录中所有文件，
+或者从基路径下递归搜索所有路径。比如：
+
+<bean id="sqlSessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean">
+  <property name="dataSource" ref="dataSource" />
+  <!-- 如果mapper.xml和mapper.java不是放在同一个包中的，则是需要下面的配置的，另一种是在mybatis-config.xml中的<mappers>元素中指定mapper.xml文件的位置。 -->
+  <property name="mapperLocations" value="classpath*:sample/config/mappers/**/*.xml" />
+</bean>
+
+这会从类路径下加载在sample.config.mappers包和它的子包中所有的MyBatis映射器XML文件。
+在容器环境管理事物中，一个可能需要的属性是transactionFactoryClass。
+
+注意：Since 1.3.0, configuration property has been added. It can be specified a Configuration instance directly without MyBatis XML configuration file. For example:
+
+<bean id="sqlSessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean">
+  <property name="dataSource" ref="dataSource" />
+  <property name="configuration">
+    <bean class="org.apache.ibatis.session.Configuration">
+      <property name="mapUnderscoreToCamelCase" value="true"/>
+    </bean>
+  </property>
+</bean>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

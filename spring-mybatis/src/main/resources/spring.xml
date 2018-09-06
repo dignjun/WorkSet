@@ -61,6 +61,7 @@
 		SQLSessionFactoryBean是用于创建SQLSessionFactory这个工厂bean的 -->
 	<bean id="sqlSessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean">
 		<property name="dataSource" ref="dataSource" />
+		
 	</bean>
 
 	<!-- 映射器类 -->
