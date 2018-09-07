@@ -1,0 +1,79 @@
+web应用部署的根目录，编译路径和项目的根目录有什么区别？
+
+你有一个项目，名字叫做testPro
+
+项目放到了你的D盘，目录结构是这样的：
+
+D:/testPro
+
+--src
+
+  --main
+
+    --webapp
+
+      --WEB-INF
+
+--target
+
+  --classes
+
+这里，项目的根目录就是D:/testPro
+
+web应用部署的根目录就是webapp目录（当然你的目录可能叫web或者webroot或者别的什么）
+
+编译路径默认的就是target/classes
+
+附一个javaweb项目的目录结构
+
+├── pom.xml //maven的配置文件
+└── src
+    ├── main
+    │   ├── java //java代码的目录
+    │   │   └── mygroup
+    │   │       ├── controller
+    │   │       │   ├── HomeController.java
+    │   │       │   └── PersonController.java
+    │   │       ├── dao
+    │   │       │   └── PersonDao.java
+    │   │       └── model
+    │   │           └── Person.java
+    │   ├── resources //静态资源目录
+    │   │   ├── db.properties
+    │   │   ├── log4j.xml
+    │   │   └── META-INF
+    │   │       └── persistence.xml
+    │   └── webapp //web应用部署根目录
+    │       ├── index.html //因为是静态html文件，不用放到WEB-INF目录下
+    │       ├── META-INF
+    │       │   ├── context.xml
+    │       │   └── MANIFEST.MF
+    │       ├── resources //css，js等静态资源是不能放到WEB-INF目录下的，因为WEB-INF下的资源，客户端无法直接访问
+    │       │   └── css
+    │       │       └── screen.css
+    │       └── WEB-INF //jsp都会放到这里，以保证用户无法直接访问jsp，而是通过controller这个目录下的所有内容客户端都无法直接访问，所以不要放静态文件
+    │           ├── spring
+    │           │   ├── app
+    │           │   │   ├── controllers.xml
+    │           │   │   └── servlet-context.xml
+    │           │   ├── db.xml
+    │           │   └── root-context.xml
+    │           ├── views
+    │           │   ├── edit.jsp
+    │           │   ├── home.jsp
+    │           │   └── list.jsp
+    │           └── web.xml
+    └── test
+        ├── java
+        │   └── mygroup
+        │       ├── controller
+        │       │   ├── DataInitializer.java
+        │       │   ├── HomeControllerTest.java
+        │       │   └── PersonControllerTest.java
+        │       └── dao
+        │           └── PersonDaoTest.java
+        └── resources
+            ├── db.properties
+            ├── log4j.xml
+            ├── test-context.xml
+            └── test-db.xml
