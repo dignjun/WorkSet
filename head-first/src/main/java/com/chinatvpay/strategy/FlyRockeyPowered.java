@@ -10,5 +10,4 @@ public class FlyRockeyPowered implements FlyBehavior {
 	public void fly() {
 		System.out.println("我可以使用飞箭飞行");
 	}
-
 }
