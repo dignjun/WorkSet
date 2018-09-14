@@ -14,6 +14,7 @@ import javax.servlet.ServletResponse;
   3 调用 servlet 的 service 方法，同时传递 ServletRequest 和 ServletResponse 对象。
   4 当 servlet 类被关闭的时候，调用 servlet 的 destroy 方法并卸载 servlet 类。
 */
+// 这是个用来测试建立起来servlet容器的，目前支持是对简单的servlet支持
 public class PrimitiveServlet implements Servlet{
 
 	// 在servlet
