@@ -20,7 +20,7 @@ public class ResponseFacade implements ServletResponse{
 	public ResponseFacade(Response response) {
 		this.response = response;
 	}
-	/*接口的实现全部是接口的实现*/
+	/*实现全部是接口的实现*/
 	@Override
 	public String getCharacterEncoding() {
 		return response.getCharacterEncoding();
