@@ -41,7 +41,8 @@ public class Response implements ServletResponse {
 		try {
 			/* request.getUri 已经被 request.getRequestURI 取代 */
 			File file = new File(Constants.WEB_ROOT, request.getUri());
-			System.out.println(file.getAbsolutePath());// TODO 路径完全没有错，但是下面输出为啥没有东西？？
+			// TODO 路径完全没有错，但是下面输出为啥没有东西？？使用outputstream输出html到页面无显示，但是控制台的打印输出内容是没有问题的。
+			System.out.println(file.getAbsolutePath());
 			fis = new FileInputStream(file);
 			/*
 			 * HTTP Response = Status-Line(( general-header | response-header |

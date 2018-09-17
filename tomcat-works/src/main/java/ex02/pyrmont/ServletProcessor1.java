@@ -30,9 +30,12 @@ public class ServletProcessor1 {
 			// 创建一个 URLClassLoader
 			URL[] urls = new URL[1];
 			URLStreamHandler streamHandler = null;
-//			File classPath = new File(Constants.WEB_ROOT);
+			
+			//			File classPath = new File(Constants.WEB_ROOT);
+			// TODO // 使用web_root实现不了，只好将路径直接修改为类的路径了QAQ
 			File classPath = new File("target\\classes\\ex02\\pyrmont");
 			System.out.println("classpath.getCanonicalPath()：" + classPath.getCanonicalPath());
+			
 			// the forming of repository is taken from the
 			// createClassLoader method in
 			// org.apache.catalina.startup.ClassLoaderFactory
@@ -55,9 +58,10 @@ public class ServletProcessor1 {
 		Class myClass = null;
 		try {
 			// 通过类类加载器获得目标servlet类
-			// F:\github\tomcat-works\webroot\PrimitiveServlet 但是maven工程的编译路径在target中，这里会报空指针异常。
-			// F:\github\tomcat-works\webroot\ex02\pyrmont\PrimitiveServlet
-//			myClass = loader.loadClass(servletName);
+			// F:\github\tomcat-works\webroot\PrimitiveServlet 实际拼接的路径，但是maven工程的编译路径在target中，这里会报空指针异常。
+			// F:\github\tomcat-works\webroot\ex02\pyrmont\PrimitiveServlet 如果编译输出路径是webroot的话，也应该是这样的路径。
+			//			myClass = loader.loadClass(servletName);
+			// TODO 这里好像并不能像上面的写法直接使用serlvet的类名，然后拼接web_root的路径得到class文件的绝对路径并且加载这个类，所以这里的为了测试直接将类的限定名copy了过来。
 			myClass = loader.loadClass("ex02.pyrmont.PrimitiveServlet");
 		} catch (ClassNotFoundException e) {
 			System.out.println(e.toString());
@@ -65,6 +69,10 @@ public class ServletProcessor1 {
 		Servlet servlet = null;
 		try {
 			servlet = (Servlet) myClass.newInstance();
+			
+			// TODO 这里的转型是看不懂的，明明是实现类，形参传递一点问题都没有，这里为什么要特地的向下转型呢？ 为此，改进出了2
+			// 拥有一个Request实例，它们就可以调用parse方法。拥有一个 Response 实例，就可以调用 sendStaticResource 方法
+			// 所以这里的做了转型操作，转型之后的request和response方法就是父类型了，就会忽略实现的特有的特征了，servlet的serive中就不能使用上面提到的两个方法了。
 			servlet.service((ServletRequest) request,
 					(ServletResponse) response);
 		} catch (Exception e) {
@@ -74,3 +82,39 @@ public class ServletProcessor1 {
 		}
 	}
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

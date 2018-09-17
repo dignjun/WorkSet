@@ -35,6 +35,7 @@ public class PrimitiveServlet implements Servlet{
 			throws ServletException, IOException {
 		System.out.println("from service");
 		PrintWriter out = response.getWriter();
+		// TODO 这里也是蛮奇怪的，应用启动了之后，一切正常，但是浏览器就是现实无响应，好像并不能使用printwriter输出数据似得。
 		out.println("Hello. Roses are red.");
 		out.print("Violets are blue.");
 	}
