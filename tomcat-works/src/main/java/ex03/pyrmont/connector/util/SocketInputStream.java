@@ -23,7 +23,7 @@ public class SocketInputStream extends InputStream {
 	protected int pos;
 	protected InputStream is;
 	protected static StringManager sm = StringManager
-			.getManager("ex03.pyrmont.connector.http.util");
+			.getManager("ex03.pyrmont.connector.http");
 
 	public SocketInputStream(InputStream is, int bufferSize) {
 		this.is = is;

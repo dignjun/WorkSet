@@ -12,7 +12,7 @@ import ex03.pyrmont.connector.util.StringManager;
 
 /**
  * SocketInputStream这个类的导入相当不易，特地下载了tomcat4，并引用了它的lib才可以使用这个类
- * 在更高版本的tomcat中已经将相关的连接器替换了，这个类也就不可以使用了，其实jdk中也是有的，不过是并不是public的。而是默认的修饰符
+ * 在更高版本的tomcat中已经将相关的连接器替换了，这个类也就不可以使用了，其实jdk中也是有的，不过是并不是public的。
  * 
  * @author DINGJUN
  *
@@ -46,7 +46,7 @@ public class HttpProcessor {
 			response.setHeader("Server", "Pyrmont Servlet Container");
 			parseRequest(input, output);
 			parseHeaders(input);
-			if (request.getUri().startsWith("/servlet/")) {
+			if (request.getRequestURI().startsWith("/servlet/")) {
 				// servlet的处理
 				ServletProcessor processor = new ServletProcessor();
 				processor.process(request, response);

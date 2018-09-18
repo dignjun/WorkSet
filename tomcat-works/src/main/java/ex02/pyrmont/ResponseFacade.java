@@ -21,55 +21,40 @@ public class ResponseFacade implements ServletResponse{
 		this.response = response;
 	}
 	/*实现全部是接口的实现*/
-	@Override
 	public String getCharacterEncoding() {
 		return response.getCharacterEncoding();
 	}
-	@Override
 	public String getContentType() {
 		return response.getContentType();
 	}
-	@Override
 	public ServletOutputStream getOutputStream() throws IOException {
 		return response.getOutputStream();
 	}
-	@Override
 	public PrintWriter getWriter() throws IOException {
 		return response.getWriter();
 	}
-	@Override
 	public void setCharacterEncoding(String charset) {
 	}
-	@Override
 	public void setContentLength(int len) {
 	}
-	@Override
 	public void setContentType(String type) {
 	}
-	@Override
 	public void setBufferSize(int size) {
 	}
-	@Override
 	public int getBufferSize() {
 		return response.getBufferSize();
 	}
-	@Override
 	public void flushBuffer() throws IOException {
 	}
-	@Override
 	public void resetBuffer() {
 	}
-	@Override
 	public boolean isCommitted() {
 		return response.isCommitted();
 	}
-	@Override
 	public void reset() {
 	}
-	@Override
 	public void setLocale(Locale loc) {
 	}
-	@Override
 	public Locale getLocale() {
 		return response.getLocale();
 	}
