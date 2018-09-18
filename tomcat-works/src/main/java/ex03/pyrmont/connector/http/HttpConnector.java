@@ -6,6 +6,7 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.UnknownHostException;
 /**
+ * catalina中有两个主要的模块：连接器和容器。
  * 
  * 连接器，连接器和容器的关键组件之一。
  * 职责是创建一个服务器套接字用来等待钱来的HTTP请求。
@@ -50,8 +51,8 @@ public class HttpConnector implements Runnable{
 				continue;
 			}
 			// Hand this socket off to an HttpProcessor
-//			HttpProcessor processor = new HttpProcessor(this);
-//			processor.process(socket);
+			HttpProcessor processor = new HttpProcessor(this);
+			processor.process(socket);
 		}
 	}
 	
