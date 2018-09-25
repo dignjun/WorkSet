@@ -6,6 +6,8 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.UnknownHostException;
 
+import ex032.pyrmont.connector.http.HttpProcessor;
+
 public class HttpConnector implements Runnable{
 
 	boolean stopped;
@@ -34,8 +36,8 @@ public class HttpConnector implements Runnable{
 			} catch (IOException e) {
 				continue;
 			}
-			// 使用HttpProcessor处理这个socket
-			// TODO 
+			HttpProcessor httpProcessor = new HttpProcessor(this);
+			httpProcessor.process(socket);
 			
 		}
 	}

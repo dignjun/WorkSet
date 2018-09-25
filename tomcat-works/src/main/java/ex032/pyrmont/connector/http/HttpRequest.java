@@ -95,7 +95,7 @@ public class HttpRequest implements HttpServletRequest {
 		this.input = input;
 	}
 
-	// TODO 没怎么明白这里的请求头？？？ 添加请求头。
+	// 请求头的解析
 	public void addHeader(String name, String value) {
 		name = name.toLowerCase();
 		synchronized (headers) {

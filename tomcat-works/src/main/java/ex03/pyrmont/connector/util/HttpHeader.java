@@ -1,6 +1,6 @@
 package ex03.pyrmont.connector.util;
 
-final public class HttpHeader {
+final public class HttpHeader{
 	public static final int INITIAL_NAME_SIZE = 32;
 	public static final int INITIAL_VALUE_SIZE = 64;
 	public static final int MAX_NAME_SIZE = 128;

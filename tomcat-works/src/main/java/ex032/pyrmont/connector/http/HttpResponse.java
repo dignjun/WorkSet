@@ -1,11 +1,15 @@
 package ex032.pyrmont.connector.http;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Locale;
@@ -16,10 +20,13 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.apache.catalina.util.CookieTools;
 
+import ex03.pyrmont.connector.ResponseWriter;
+import ex032.pyrmont.connector.ResponseStream;
+
 /*
  * 响应
  */
-@SuppressWarnings("rawtypes")
+@SuppressWarnings({"rawtypes","unchecked"})
 public class HttpResponse implements HttpServletResponse {
 
 	private static final int BUFFER_SIZE = 1024;
@@ -253,11 +260,73 @@ public class HttpResponse implements HttpServletResponse {
 		this.request = request;
 	}
 	
+	public void sendStaticResource() throws IOException {
+		byte[] bytes = new byte[BUFFER_SIZE];
+		FileInputStream fis = null;
+		try {
+			File file = new File(Constants.WEB_ROOT, request.getRequestURI());
+			fis = new FileInputStream(file);
+			/*
+	         HTTP Response = Status-Line
+	           *(( general-header | response-header | entity-header ) CRLF)
+	           CRLF
+	           [ message-body ]
+	         Status-Line = HTTP-Version SP Status-Code SP Reason-Phrase CRLF
+			*/
+			int ch = fis.read(bytes, 0, BUFFER_SIZE);
+			while(ch != -1){
+				output.write(bytes, 0, ch);
+				ch = fis.read(bytes, 0, BUFFER_SIZE);
+			}
+		} catch (FileNotFoundException e) {
+			String errorMessage = "HTTP/1.1 404 File Not Found\r\n" +
+			        "Content-Type: text/html\r\n" +
+			        "Content-Length: 23\r\n" +
+			        "\r\n" +
+			        "<h1>File Not Found</h1>";
+			output.write(errorMessage.getBytes());
+		} finally{
+			if(fis != null){
+				fis.close();
+			}
+		}
+	}
 	
-
+	public void write(int b) throws IOException{
+		if(bufferCount >= buffer.length){
+			flushBuffer();
+		}
+		buffer[bufferCount ++] = (byte) b;
+		contentCount ++;
+	}
+	public void write(byte b[], int off, int len) throws IOException{
+		if(len == 0) {
+			return;
+		}
+		if(len <= (buffer.length - bufferCount)) {
+			System.arraycopy(b, off, buffer, bufferCount, len);
+			bufferCount += len;
+			contentCount += len;
+			return;
+		}
+		
+		flushBuffer();
+		int iterations = len / buffer.length;
+		int leftoverStart = iterations * buffer.length;
+		int leftoverLen = len - leftoverStart;
+		for(int i=0; i < iterations; i ++){
+			write(b, off + (i * buffer.length), buffer.length);
+		}
+		if(leftoverLen > 0) {
+			write(b, off + leftoverStart, leftoverLen);
+		}
+	}
 	/* 接口实现的方法 */
 	public String getCharacterEncoding() {
-		return encoding;
+		if(encoding == null)
+			return "ISO-8859-1";
+		else
+			return encoding;
 	}
 
 	public String getContentType() {
@@ -268,148 +337,191 @@ public class HttpResponse implements HttpServletResponse {
 		return null;
 	}
 
+	// 获取输出流
 	public PrintWriter getWriter() throws IOException {
-		// TODO Auto-generated method stub
-		return null;
+		ResponseStream newStream = new ResponseStream(this);
+		newStream.setCommit(false);
+		OutputStreamWriter osr = new OutputStreamWriter(newStream, getCharacterEncoding());
+		writer = new ResponseWriter(osr);
+		return writer;
 	}
 
 	public void setCharacterEncoding(String charset) {
-		// TODO Auto-generated method stub
-
 	}
 
 	public void setContentLength(int len) {
-		// TODO Auto-generated method stub
-
+		if(isCommitted())
+			return;
+		this.contentLength = len;
 	}
 
 	public void setContentType(String type) {
-		// TODO Auto-generated method stub
-
 	}
 
 	public void setBufferSize(int size) {
-		// TODO Auto-generated method stub
 
 	}
 
 	public int getBufferSize() {
-		// TODO Auto-generated method stub
 		return 0;
 	}
 
 	public void flushBuffer() throws IOException {
-		// TODO Auto-generated method stub
-
+		// committed = true;
+		if(bufferCount > 0){
+			try {
+				output.write(buffer, 0, bufferCount);
+			} finally {
+				bufferCount = 0;
+			}
+		}
 	}
 
 	public void resetBuffer() {
-		// TODO Auto-generated method stub
 
 	}
 
 	public boolean isCommitted() {
-		// TODO Auto-generated method stub
-		return false;
+		return committed;
 	}
 
 	public void reset() {
-		// TODO Auto-generated method stub
 
 	}
 
 	public void setLocale(Locale loc) {
-		// TODO Auto-generated method stub
-
+		if(isCommitted()){
+			return;
+		}
+		String language = loc.getLanguage();
+		if((language!=null)&&(language.length()>0)){
+			String country = loc.getCountry();
+			StringBuffer value = new StringBuffer(language);
+			if((country != null) && (country.length() > 0)){
+				value.append('-');
+				value.append(country);
+			}
+			setHeader("Content-Language", value.toString());
+		}
 	}
 
 	public Locale getLocale() {
-		// TODO Auto-generated method stub
 		return null;
 	}
 
 	public void addCookie(Cookie cookie) {
-		// TODO Auto-generated method stub
-
+		if(isCommitted()) {
+			return ;
+		}
+		synchronized (cookies) {
+			cookies.add(cookie);
+		}
 	}
 
 	public boolean containsHeader(String name) {
-		// TODO Auto-generated method stub
-		return false;
+		synchronized (headers) {
+			return headers.get(name) != null;
+		}
 	}
 
 	public String encodeURL(String url) {
-		// TODO Auto-generated method stub
 		return null;
 	}
 
 	public String encodeRedirectURL(String url) {
-		// TODO Auto-generated method stub
 		return null;
 	}
 
 	public String encodeUrl(String url) {
-		// TODO Auto-generated method stub
-		return null;
+		return encodeURL(url);
 	}
 
 	public String encodeRedirectUrl(String url) {
-		// TODO Auto-generated method stub
-		return null;
+		return encodeRedirectURL(url);
 	}
 
 	public void sendError(int sc, String msg) throws IOException {
-		// TODO Auto-generated method stub
 
 	}
 
 	public void sendError(int sc) throws IOException {
-		// TODO Auto-generated method stub
 
 	}
 
 	public void sendRedirect(String location) throws IOException {
-		// TODO Auto-generated method stub
 
 	}
 
 	public void setDateHeader(String name, long date) {
-		// TODO Auto-generated method stub
-
+		if(isCommitted())
+			return;
+		setHeader(name, format.format(new Date(date)));
 	}
 
 	public void addDateHeader(String name, long date) {
-		// TODO Auto-generated method stub
+		if(isCommitted())
+			return;
+		addHeader(name, format.format(new Date(date)));
 
 	}
 
+	// 设置响应头，注意和addHeader方法做出区分。
 	public void setHeader(String name, String value) {
-		// TODO Auto-generated method stub
-
+		if(committed)
+			return;
+		ArrayList values = new ArrayList();
+		values.add(value);
+		synchronized (headers) {
+			headers.put(name, values);
+		}
+		String match = name.toLowerCase();
+		if(match.equals("content-length")){
+			int contentLength= -1;
+			try {
+				contentLength = Integer.parseInt(value);
+			} catch (Exception e) {
+				;
+			}
+			if(contentLength >= 0){
+				setContentLength(contentLength);
+			}else{
+				setContentType(value);
+			}
+		}
 	}
 
+	// 添加响应头，这个头部是一个HashMap，键值对的值是一个ArrayList，第一次添加的时候先判断是否是已经存在过，然后添加值。
 	public void addHeader(String name, String value) {
-		// TODO Auto-generated method stub
-
+		if(isCommitted())
+			return;
+		synchronized (headers) {
+			ArrayList values = (ArrayList) headers.get(name);
+			if(values == null){
+				values = new ArrayList();
+				headers.put(name, values);
+			}
+			values.add(value);
+		}
 	}
 
 	public void setIntHeader(String name, int value) {
-		// TODO Auto-generated method stub
-
+		if(isCommitted()){
+			return;
+		}
+		setHeader(name, "" + value);
 	}
 
 	public void addIntHeader(String name, int value) {
-		// TODO Auto-generated method stub
-
+		if(isCommitted())
+			return;
+		addHeader(name, "" + value);
 	}
 
 	public void setStatus(int sc) {
-		// TODO Auto-generated method stub
 
 	}
 
 	public void setStatus(int sc, String sm) {
-		// TODO Auto-generated method stub
 
 	}
 
