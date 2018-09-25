@@ -8,6 +8,11 @@ import java.net.UnknownHostException;
 
 import ex032.pyrmont.connector.http.HttpProcessor;
 
+/**
+ * 连接器，职责是创建一个服务器套接字用来等待前来的 HTTP 请求
+ * @author DINGJUN
+ *
+ */
 public class HttpConnector implements Runnable{
 
 	boolean stopped;
