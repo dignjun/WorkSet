@@ -13,6 +13,12 @@ import ex05.pyrmont.core.SimpleWrapper;
 import ex05.pyrmont.valves.ClientIPLoggerValve;
 import ex05.pyrmont.valves.HeaderLoggerValve;
 
+/**
+ * 这个容器使用到Context和Wrapper
+ * 
+ * @author DINGJUN
+ *
+ */
 @SuppressWarnings("deprecation")
 public class BootStrap2 {
 

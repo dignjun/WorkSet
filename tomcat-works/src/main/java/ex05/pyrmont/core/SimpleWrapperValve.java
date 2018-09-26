@@ -18,7 +18,7 @@ import org.apache.catalina.ValveContext;
 
 /**
  * 阀门接口表示一个阀门，该组件负责处理请求。这个接口有两个方法，invoke和getInfo方法。
- * 
+ * SimpleWrapperValve 类是一个给 SimpleWrapper 类专门处理请求的基本阀门
  * @author DINGJUN
  *
  */
@@ -42,6 +42,7 @@ public class SimpleWrapperValve implements Valve, Contained {
 		}
 		
 		// allocate a servlet instace to precess this request
+		// 加载指定的servlet处理这个请求
 		try {
 			servlet = wrapper.allocate();
 			if(hres!=null && hreq!=null){

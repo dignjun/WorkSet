@@ -10,6 +10,12 @@ import org.apache.catalina.Container;
 import org.apache.catalina.DefaultContext;
 import org.apache.catalina.Loader;
 
+/**
+ * Servlet的加载任务。
+ * 
+ * @author DINGJUN
+ *
+ */
 public class SimpleLoader implements Loader{
 
 	public static final String WEB_ROOT = System.getProperty("user.dir") + File.separator + "webroot";
