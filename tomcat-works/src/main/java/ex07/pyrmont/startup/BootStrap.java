@@ -55,7 +55,7 @@ public class BootStrap {
 		logger.setPrefix("FileLog_");
 		logger.setSuffix(".txt");
 		logger.setTimestamp(true);
-		logger.setDirectory("webroot");
+		logger.setDirectory("f://webroot");
 		context.setLogger(logger);
 
 		// ---------------------------
