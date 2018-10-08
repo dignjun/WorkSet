@@ -44,7 +44,8 @@ public class BootStrap {
 		// StandardContext(sets configured to true).otherwis standardcontext
 		// won't be start
 		LifecycleListener listener = new SimpleContextConfig();
-		// 这里的转型是需要留心的，因为context接口本身是没有实现Lifecycle接口的，但是context接口的实现
+		// 这里的转型是需要留心的，因为context接口本身是没有实现Lifecycle接口的，但是context接口的实现类实现了Lifecycle接口。
+		// 
 		((Lifecycle) context).addLifecycleListener(listener);
 
 		// here is our loader
